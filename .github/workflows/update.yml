@@ -17,10 +17,7 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: '18'
-
-      - name: Install dependencies (if any)
-        run: npm install
-
+          
       - name: Run update script
         run: node updateRepo.js
 
