@@ -1,5 +1,4 @@
-- name: Generate repo.json
-  run: |
+run: |
     python3 <<EOF
     import requests, json
     from datetime import datetime
