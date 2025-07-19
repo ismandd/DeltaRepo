@@ -1,4 +1,19 @@
 {
-  "updatedAt": "2025-07-19T14:54:49.242Z",
-  "pageTitle": "Just a moment..."
+  "name": "Delta",
+  "url": "https://delta.webfiles.pro/file/Delta-2.679.761.ipa",       // base URL where apps and plist files are hosted
+  "description": "Executer",
+  "author": "Delta",
+  "apps": [
+    {
+      "bundleIdentifier": "com.delta.app",
+      "name": "Delta-IOS",
+      "version": "1.0.0",
+      "author": "Delta",
+      "url": "https://delta.webfiles.pro/file/Delta-2.679.761.ipa",
+      "plist": "https://delta.webfiles.pro/file/Delta-2.679.761.ipa",
+      "icon": "https://delta.webfiles.pro/file/Delta-2.679.761.ipa"
+    }
+    // Add more apps as needed
+  ],
+  "updatedAt": "2025-07-19T14:54:49.242Z"
 }
