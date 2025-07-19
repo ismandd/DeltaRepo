@@ -1,16 +1,13 @@
-const puppeteer = require('puppeteer');
+const puppeteer = require('puppeteer-extra');
+const StealthPlugin = require('puppeteer-extra-plugin-stealth');
+puppeteer.use(StealthPlugin());
 
 (async () => {
-  const browser = await puppeteer.launch({
-    args: ['--no-sandbox', '--disable-setuid-sandbox'],
-  });
-
+  const browser = await puppeteer.launch({ headless: true });
   const page = await browser.newPage();
   await page.goto('https://delta.webfiles.pro/get_files.php', { waitUntil: 'networkidle2' });
-
-  const content = await page.evaluate(() => document.body.innerText);
-  require('fs').writeFileSync('repo.json', content);
-
+  
+  // do whatever you want here
+  
   await browser.close();
 })();
-
