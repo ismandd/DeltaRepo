@@ -2,8 +2,8 @@ name: Update repo.json with latest Delta iOS info
 
 on:
   schedule:
-    - cron: '0 * * * *'  # runs every hour
-  workflow_dispatch:     # manual trigger allowed
+    - cron: '0 * * * *'  # Every hour
+  workflow_dispatch:     # Manual run
 
 jobs:
   update_repo_json:
@@ -12,7 +12,7 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v3
         with:
-          persist-credentials: false  # Disable default token persistence
+          persist-credentials: false
 
       - name: Setup git user and auth
         run: |
@@ -20,27 +20,13 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/ismandd/DeltaRepo.git
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '18'
-
-      - name: Install Puppeteer
-        run: npm install puppeteer
-
-      - name: Fetch latest JSON data with Puppeteer
+      - name: Fetch latest JSON data with headers
         run: |
-          node -e "
-          const puppeteer = require('puppeteer');
-          (async () => {
-            const browser = await puppeteer.launch({ args: ['--no-sandbox', '--disable-setuid-sandbox'] });
-            const page = await browser.newPage();
-            await page.goto('https://delta.webfiles.pro/get_files.php', { waitUntil: 'networkidle0' });
-            const content = await page.evaluate(() => document.body.innerText);
-            require('fs').writeFileSync('repo.json', content);
-            await browser.close();
-          })();
-          "
+          curl -s -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36" \
+               -H "Accept: application/json" \
+               -H "Referer: https://delta.webfiles.pro/" \
+               -H "Origin: https://delta.webfiles.pro" \
+               https://delta.webfiles.pro/get_files.php > repo.json
 
       - name: Check if repo.json changed
         id: check_changes
@@ -57,7 +43,7 @@ jobs:
       - name: Commit and push changes
         if: steps.check_changes.outputs.changed == 'true'
         run: |
+          git pull --rebase origin main || (git rebase --abort && exit 1)
           git add repo.json
           git commit -m "Update repo.json with latest Delta iOS info"
-          git pull --rebase origin main || (git rebase --abort && exit 1)
           git push origin HEAD:main
