@@ -1,13 +1,14 @@
-const puppeteer = require('puppeteer-extra');
-const StealthPlugin = require('puppeteer-extra-plugin-stealth');
-puppeteer.use(StealthPlugin());
+const puppeteer = require('puppeteer');
 
 (async () => {
   const browser = await puppeteer.launch({ headless: true });
   const page = await browser.newPage();
+  
   await page.goto('https://delta.webfiles.pro/get_files.php', { waitUntil: 'networkidle2' });
   
-  // do whatever you want here
+  // You can get the page content after JS executes
+  const content = await page.content();
+  console.log(content);
   
   await browser.close();
 })();
