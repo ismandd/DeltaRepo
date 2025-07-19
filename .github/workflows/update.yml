@@ -20,9 +20,27 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/ismandd/DeltaRepo.git
 
-      - name: Fetch latest JSON data
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Install Puppeteer
+        run: npm install puppeteer
+
+      - name: Fetch latest JSON data with Puppeteer
         run: |
-          curl -s https://delta.webfiles.pro/get_files.php > repo.json
+          node -e "
+          const puppeteer = require('puppeteer');
+          (async () => {
+            const browser = await puppeteer.launch({ args: ['--no-sandbox', '--disable-setuid-sandbox'] });
+            const page = await browser.newPage();
+            await page.goto('https://delta.webfiles.pro/get_files.php', { waitUntil: 'networkidle0' });
+            const content = await page.evaluate(() => document.body.innerText);
+            require('fs').writeFileSync('repo.json', content);
+            await browser.close();
+          })();
+          "
 
       - name: Check if repo.json changed
         id: check_changes
@@ -43,6 +61,3 @@ jobs:
           git commit -m "Update repo.json with latest Delta iOS info"
           git pull --rebase origin main || (git rebase --abort && exit 1)
           git push origin HEAD:main
-
-
-
