@@ -1,96 +1,12 @@
-name: Update Delta Source
+- name: Generate repo.json raw from delta.webfiles.pro
+  run: |
+    python3 <<EOF
+    import requests
 
-on:
-  workflow_dispatch:
-  schedule:
-    - cron: '0 * * * *' # every hour
+    url = "https://delta.webfiles.pro/get_files.php"
+    response = requests.get(url)
+    response.raise_for_status()
 
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: 3.11
-
-      - name: Generate repo.json with latest Delta IPA
-        run: |
-          python3 <<EOF
-          import requests, json
-          from datetime import datetime
-          import sys
-
-          url = "https://delta.webfiles.pro/get_files.php"
-          response = requests.get(url)
-
-          if response.status_code != 200:
-              print(f"Error: Status code {response.status_code}")
-              sys.exit(1)
-
-          try:
-              data = response.json()
-          except Exception as e:
-              print(f"Failed to parse JSON: {e}")
-              print(f"Raw response: {response.text}")
-              sys.exit(1)
-
-          ipa_list = data.get("latest_ipa", [])
-          if not ipa_list:
-              print("No IPA files found in response.")
-              sys.exit(1)
-
-          ipa = ipa_list[0]
-          version = ipa["name"].replace("Delta-", "").replace(".ipa", "")
-          date = datetime.fromtimestamp(ipa["timestamp"]).isoformat()
-          size = ipa["size"]
-          download_url = f"https://delta.webfiles.pro/file/{ipa['name']}"
-
-          repo = {
-              "name": "Delta Source",
-              "subtitle": "Latest Delta build, auto-updated",
-              "description": "Unofficial live source for the Delta iOS emulator.",
-              "iconURL": "https://delta.webfiles.pro/assets/delta_icon.png",
-              "headerURL": "https://delta.webfiles.pro/assets/delta_icon.png",
-              "website": "https://delta.webfiles.pro",
-              "tintColor": "#8000FF",
-              "featuredApps": ["com.rileytestut.Delta"],
-              "apps": [
-                  {
-                      "name": "Delta",
-                      "bundleIdentifier": "com.rileytestut.Delta",
-                      "developerName": "Riley Testut",
-                      "subtitle": "Play Nintendo games on iOS",
-                      "localizedDescription": "Delta is an advanced multi-system emulator for iOS. This source auto-syncs with the latest version from delta.webfiles.pro.",
-                      "iconURL": "https://delta.webfiles.pro/assets/delta_icon.png",
-                      "tintColor": "#8000FF",
-                      "screenshots": [],
-                      "versions": [
-                          {
-                              "version": version,
-                              "date": date,
-                              "size": size,
-                              "downloadURL": download_url,
-                              "localizedDescription": f"Delta {version} from delta.webfiles.pro",
-                              "minOSVersion": "12.0"
-                          }
-                      ]
-                  }
-              ],
-              "news": []
-          }
-
-          with open("repo.json", "w") as f:
-              json.dump(repo, f, indent=4)
-          EOF
-
-      - name: Commit and push changes
-        run: |
-          git config --global user.name "GitHub Action"
-          git config --global user.email "action@github.com"
-          git add repo.json
-          git diff --quiet && git diff --staged --quiet || git commit -m "Update repo.json with latest Delta build"
-          git push
+    with open("repo.json", "w") as f:
+        f.write(response.text)
+    EOF
