@@ -8,7 +8,7 @@ const puppeteer = require('puppeteer');
     });
     const page = await browser.newPage();
 
-    await page.goto('https://example.com', { waitUntil: 'networkidle2' });
+    await page.goto('https://delta.webfiles.pro/get_files.php', { waitUntil: 'networkidle2' });
 
     const data = await page.evaluate(() => {
       return {
