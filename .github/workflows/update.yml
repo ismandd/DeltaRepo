@@ -1,35 +1,49 @@
-name: Update Delta AltStore Repo
+name: Update Delta Source
 
 on:
+  workflow_dispatch:
   schedule:
-    - cron: "0 */12 * * *"  # Every 12 hours
-  workflow_dispatch:        # Manual trigger
+    - cron: '0 * * * *' # every hour
 
 jobs:
-  update:
+  build:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout Repository
+      - name: Checkout repo
         uses: actions/checkout@v4
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.x'
-
-      - name: Install Dependencies
-        run: pip install requests
+          python-version: 3.11
 
       - name: Generate repo.json with latest Delta IPA
         run: |
           python3 <<EOF
           import requests, json
           from datetime import datetime
+          import sys
 
-          response = requests.get("https://delta.webfiles.pro/get_files.php")
-          ipa = response.json()["latest_ipa"][0]
+          url = "https://delta.webfiles.pro/get_files.php"
+          response = requests.get(url)
 
+          if response.status_code != 200:
+              print(f"Error: Status code {response.status_code}")
+              sys.exit(1)
+
+          try:
+              data = response.json()
+          except Exception as e:
+              print(f"Failed to parse JSON: {e}")
+              print(f"Raw response: {response.text}")
+              sys.exit(1)
+
+          ipa_list = data.get("latest_ipa", [])
+          if not ipa_list:
+              print("No IPA files found in response.")
+              sys.exit(1)
+
+          ipa = ipa_list[0]
           version = ipa["name"].replace("Delta-", "").replace(".ipa", "")
           date = datetime.fromtimestamp(ipa["timestamp"]).isoformat()
           size = ipa["size"]
@@ -73,10 +87,10 @@ jobs:
               json.dump(repo, f, indent=4)
           EOF
 
-      - name: Commit and Push Changes
+      - name: Commit and push changes
         run: |
-          git config user.name "github-actions"
-          git config user.email "actions@github.com"
+          git config --global user.name "GitHub Action"
+          git config --global user.email "action@github.com"
           git add repo.json
-          git commit -m "Update repo.json with latest Delta IPA" || echo "No changes"
+          git diff --quiet && git diff --staged --quiet || git commit -m "Update repo.json with latest Delta build"
           git push
