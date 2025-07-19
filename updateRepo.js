@@ -11,9 +11,10 @@ https.get(url, (res) => {
   });
 
   res.on('end', () => {
+    console.log('Raw response data:', data);  // <-- log raw data here
+
     try {
       const jsonData = JSON.parse(data);
-      // Write the fetched JSON exactly as is to repo.json
       fs.writeFile('repo.json', JSON.stringify(jsonData, null, 2), (err) => {
         if (err) {
           console.error('Error writing to repo.json:', err);
