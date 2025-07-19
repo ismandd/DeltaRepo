@@ -1,3 +1,4 @@
+name: "Delta Update Ipa"
 run: |
     python3 <<EOF
     import requests, json
