@@ -1,47 +1,35 @@
-name: Update repo.json with latest Delta iOS info
+name: Update repo.json
 
 on:
   schedule:
-    - cron: '0 * * * *'  # Every hour
-  workflow_dispatch:     # Manual run
+    - cron: '0 * * * *'  # Runs every hour
+  workflow_dispatch:      # Also allows manual run from Actions tab
 
 jobs:
-  update_repo_json:
+  update:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout repo
         uses: actions/checkout@v3
-        with:
-          persist-credentials: false
 
-      - name: Setup git user and auth
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm install puppeteer
+
+      - name: Run update script
+        run: node fetch-delta.js
+
+      - name: Commit changes if any
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/ismandd/DeltaRepo.git
-
-      - name: Fetch latest JSON data with headers
-        run: |
-          curl -s -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36" \
-               -H "Accept: application/json" \
-               -H "Referer: https://delta.webfiles.pro/ios.html" \
-               https://delta.webfiles.pro/get_files.php -o repo.json
-
-      - name: Check if repo.json changed
-        id: check_changes
-        run: |
           git add repo.json
-          if git diff --cached --quiet; then
-            echo "No changes to commit"
-            echo "changed=false" >> $GITHUB_OUTPUT
-          else
-            echo "Changes detected"
-            echo "changed=true" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Commit and push changes
-        if: steps.check_changes.outputs.changed == 'true'
-        run: |
-          git commit -m "Update repo.json with latest Delta iOS info"
-          git pull --rebase origin main || (git rebase --abort && exit 1)
-          git push origin HEAD:main
+          git diff --cached --quiet || git commit -m "Update repo.json"
+          git push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
