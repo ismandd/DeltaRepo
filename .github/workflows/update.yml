@@ -1,12 +1,54 @@
-- name: Generate repo.json raw from delta.webfiles.pro
+- name: Generate repo.json
   run: |
     python3 <<EOF
-    import requests
+    import requests, json
+    from datetime import datetime
 
-    url = "https://delta.webfiles.pro/get_files.php"
-    response = requests.get(url)
-    response.raise_for_status()
+    headers = {
+        "User-Agent": "Mozilla/5.0 (compatible; GitHub Actions)",
+        "Accept": "application/json",
+    }
+
+    res = requests.get("https://delta.webfiles.pro/get_files.php", headers=headers)
+    res.raise_for_status()
+    data = res.json()
+
+    ipa = data["latest_ipa"][0]
+
+    version = ipa["name"].replace("Delta-", "").replace(".ipa", "")
+    date = datetime.fromtimestamp(ipa["timestamp"]).isoformat()
+    download_url = f"https://delta.webfiles.pro/file/{ipa['name']}"
+
+    repo_data = {
+        "name": "Delta Source",
+        "subtitle": "Official Delta builds, updated automatically.",
+        "description": "Get the latest Delta emulator straight from the web.",
+        "iconURL": "https://delta.webfiles.pro/assets/delta_icon.png",
+        "headerURL": "https://delta.webfiles.pro/assets/delta_icon.png",
+        "website": "https://delta.webfiles.pro",
+        "tintColor": "#A145A6",
+        "featuredApps": ["com.rileytestut.Delta"],
+        "apps": [{
+            "name": "Delta",
+            "bundleIdentifier": "com.rileytestut.Delta",
+            "developerName": "Riley Testut",
+            "subtitle": "The best iOS emulator.",
+            "localizedDescription": "Play Nintendo games on iOS with Delta emulator.",
+            "iconURL": "https://delta.webfiles.pro/assets/delta_icon.png",
+            "tintColor": "#A145A6",
+            "screenshots": [],
+            "versions": [{
+                "version": version,
+                "date": date,
+                "size": ipa["size"],
+                "downloadURL": download_url,
+                "localizedDescription": f"Delta version {version}.",
+                "minOSVersion": "12.0"
+            }]
+        }],
+        "news": []
+    }
 
     with open("repo.json", "w") as f:
-        f.write(response.text)
+        json.dump(repo_data, f, indent=4)
     EOF
