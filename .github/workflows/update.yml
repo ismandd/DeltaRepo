@@ -39,9 +39,10 @@ jobs:
       - name: Commit and push changes
         if: steps.check_changes.outputs.changed == 'true'
         run: |
-          git pull --rebase origin main
           git add repo.json
           git commit -m "Update repo.json with latest Delta iOS info"
+          git pull --rebase origin main || (git rebase --abort && exit 1)
           git push origin HEAD:main
+
 
 
