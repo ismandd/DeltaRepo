@@ -1,32 +1,27 @@
-const https = require('https');
+const puppeteer = require('puppeteer');
 const fs = require('fs');
 
-const url = 'https://delta.webfiles.pro/get_files.php';
+(async () => {
+  try {
+    const browser = await puppeteer.launch({ headless: true });
+    const page = await browser.newPage();
 
-https.get(url, (res) => {
-  let data = '';
+    // Go to the URL
+    await page.goto('https://delta.webfiles.pro/get_files.php', { waitUntil: 'networkidle2' });
 
-  res.on('data', (chunk) => {
-    data += chunk;
-  });
+    // Wait a little just in case
+    await page.waitForTimeout(1000);
 
-  res.on('end', () => {
-    console.log('Raw response data:', data);  // <-- log raw data here
+    // Get the full page content (likely JSON)
+    const content = await page.evaluate(() => document.body.innerText);
 
-    try {
-      const jsonData = JSON.parse(data);
-      fs.writeFile('repo.json', JSON.stringify(jsonData, null, 2), (err) => {
-        if (err) {
-          console.error('Error writing to repo.json:', err);
-        } else {
-          console.log('repo.json updated successfully!');
-        }
-      });
-    } catch (err) {
-      console.error('Error parsing JSON:', err);
-    }
-  });
+    // Save the content to a file, assuming JSON
+    fs.writeFileSync('repoData.json', content);
 
-}).on('error', (err) => {
-  console.error('Error fetching URL:', err);
-});
+    console.log('Repo data saved to repoData.json');
+
+    await browser.close();
+  } catch (err) {
+    console.error('Error fetching repo data:', err);
+  }
+})();
