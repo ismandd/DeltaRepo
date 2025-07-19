@@ -1,43 +1,26 @@
-const fs = require('fs');
-const puppeteer = require('puppeteer');
+const puppeteer = require('puppeteer-extra');
+const StealthPlugin = require('puppeteer-extra-plugin-stealth');
+puppeteer.use(StealthPlugin());
 
-(async () => {
-  try {
-    const browser = await puppeteer.launch({
-      args: ['--no-sandbox', '--disable-setuid-sandbox'],
-    });
-    const page = await browser.newPage();
+async function fetchPage() {
+  const browser = await puppeteer.launch({
+    headless: true,
+    args: ['--no-sandbox', '--disable-setuid-sandbox'],
+  });
+  const page = await browser.newPage();
 
-    await page.goto('https://delta.webfiles.pro/get_files.php', { waitUntil: 'networkidle2' });
+  // Set user agent
+  await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0 Safari/537.36');
 
-    const data = await page.evaluate(() => {
-      return {
-        title: document.title,
-      };
-    });
+  // Go to the page and wait for network to be idle (no more requests)
+  await page.goto('https://targetwebsite.com', { waitUntil: 'networkidle2' });
 
-    const repoPath = './repo.json';
-    let repoData = {};
+  // Wait for an element you expect to exist in the real page, e.g. a selector unique to the content
+  await page.waitForSelector('body');
 
-    if (fs.existsSync(repoPath)) {
-      try {
-        const fileContent = fs.readFileSync(repoPath, 'utf8');
-        repoData = JSON.parse(fileContent);
-      } catch (err) {
-        console.warn('Warning: repo.json is not valid JSON, starting fresh');
-        repoData = {};
-      }
-    }
+  const pageTitle = await page.title();
+  const content = await page.content();
 
-    repoData.updatedAt = new Date().toISOString();
-    repoData.pageTitle = data.title;
-
-    fs.writeFileSync(repoPath, JSON.stringify(repoData, null, 2));
-
-    await browser.close();
-    console.log('repo.json updated successfully.');
-  } catch (error) {
-    console.error('Error updating repo.json:', error);
-    process.exit(1);
-  }
-})();
+  await browser.close();
+  return { pageTitle, content };
+}
