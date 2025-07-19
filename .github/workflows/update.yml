@@ -3,7 +3,7 @@ name: Update repo.json
 on:
   schedule:
     - cron: '0 * * * *'  # Runs every hour at minute 0
-  workflow_dispatch:      # Allows manual triggering from GitHub UI
+  workflow_dispatch:
 
 jobs:
   update-repo-json:
@@ -20,6 +20,11 @@ jobs:
 
       - name: Install dependencies
         run: npm install puppeteer
+
+      - name: Check Node and Puppeteer versions
+        run: |
+          node -v
+          npm list puppeteer
 
       - name: Run update script
         run: node updateRepo.js
