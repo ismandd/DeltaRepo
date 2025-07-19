@@ -2,12 +2,13 @@ name: Update Delta AltStore Repo
 
 on:
   schedule:
-    - cron: '0 */12 * * *'  # Every 12 hours
-  workflow_dispatch:         # Manual trigger support
+    - cron: "0 */12 * * *"  # Every 12 hours
+  workflow_dispatch:        # Manual trigger
 
 jobs:
   update:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -17,61 +18,65 @@ jobs:
         with:
           python-version: '3.x'
 
-      - name: Install dependencies
+      - name: Install Dependencies
         run: pip install requests
 
-      - name: Generate repo.json
+      - name: Generate repo.json with latest Delta IPA
         run: |
-          python3 - <<EOF
+          python3 <<EOF
           import requests, json
           from datetime import datetime
 
-          res = requests.get("https://delta.webfiles.pro/get_files.php")
-          data = res.json()
-          ipa = data["latest_ipa"][0]
+          response = requests.get("https://delta.webfiles.pro/get_files.php")
+          ipa = response.json()["latest_ipa"][0]
 
           version = ipa["name"].replace("Delta-", "").replace(".ipa", "")
           date = datetime.fromtimestamp(ipa["timestamp"]).isoformat()
+          size = ipa["size"]
           download_url = f"https://delta.webfiles.pro/file/{ipa['name']}"
 
-          repo_data = {
+          repo = {
               "name": "Delta Source",
-              "subtitle": "Official Delta builds, updated automatically.",
-              "description": "Get the latest Delta emulator straight from the web.",
+              "subtitle": "Latest Delta build, auto-updated",
+              "description": "Unofficial live source for the Delta iOS emulator.",
               "iconURL": "https://delta.webfiles.pro/assets/delta_icon.png",
               "headerURL": "https://delta.webfiles.pro/assets/delta_icon.png",
               "website": "https://delta.webfiles.pro",
-              "tintColor": "#A145A6",
+              "tintColor": "#8000FF",
               "featuredApps": ["com.rileytestut.Delta"],
-              "apps": [{
-                  "name": "Delta",
-                  "bundleIdentifier": "com.rileytestut.Delta",
-                  "developerName": "Riley Testut",
-                  "subtitle": "The best iOS emulator.",
-                  "localizedDescription": "Play Nintendo games on iOS with Delta emulator.",
-                  "iconURL": "https://delta.webfiles.pro/assets/delta_icon.png",
-                  "tintColor": "#A145A6",
-                  "screenshots": [],
-                  "versions": [{
-                      "version": version,
-                      "date": date,
-                      "size": ipa["size"],
-                      "downloadURL": download_url,
-                      "localizedDescription": f"Delta version {version}.",
-                      "minOSVersion": "12.0"
-                  }]
-              }],
+              "apps": [
+                  {
+                      "name": "Delta",
+                      "bundleIdentifier": "com.rileytestut.Delta",
+                      "developerName": "Riley Testut",
+                      "subtitle": "Play Nintendo games on iOS",
+                      "localizedDescription": "Delta is an advanced multi-system emulator for iOS. This source auto-syncs with the latest version from delta.webfiles.pro.",
+                      "iconURL": "https://delta.webfiles.pro/assets/delta_icon.png",
+                      "tintColor": "#8000FF",
+                      "screenshots": [],
+                      "versions": [
+                          {
+                              "version": version,
+                              "date": date,
+                              "size": size,
+                              "downloadURL": download_url,
+                              "localizedDescription": f"Delta {version} from delta.webfiles.pro",
+                              "minOSVersion": "12.0"
+                          }
+                      ]
+                  }
+              ],
               "news": []
           }
 
           with open("repo.json", "w") as f:
-              json.dump(repo_data, f, indent=4)
+              json.dump(repo, f, indent=4)
           EOF
 
-      - name: Commit and Push if Changed
+      - name: Commit and Push Changes
         run: |
-          git config user.name "GitHub Action"
+          git config user.name "github-actions"
           git config user.email "actions@github.com"
           git add repo.json
-          git commit -m "Update repo.json with latest Delta IPA" || echo "No changes to commit"
+          git commit -m "Update repo.json with latest Delta IPA" || echo "No changes"
           git push
