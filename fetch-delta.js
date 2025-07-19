@@ -1,20 +1,33 @@
-const fs = require('fs').promises;
+const https = require('https');
+const fs = require('fs');
 
-async function updateRepoJson() {
-  try {
-    const data = await fs.readFile('repo.json', 'utf8');
-    const json = JSON.parse(data);
+const url = 'https://delta.webfiles.pro/get_files.php';
 
-    // Update the timestamp
-    json.lastUpdated = new Date().toISOString();
+https.get(url, (res) => {
+  let data = '';
 
-    // Add your custom logic here, e.g. fetch new data, update `json.data`
+  res.on('data', (chunk) => {
+    data += chunk;
+  });
 
-    await fs.writeFile('repo.json', JSON.stringify(json, null, 2), 'utf8');
-    console.log('repo.json updated successfully.');
-  } catch (err) {
-    console.error('Error updating repo.json:', err);
-  }
-}
+  res.on('end', () => {
+    try {
+      // Parse the fetched data to ensure it's valid JSON
+      const jsonData = JSON.parse(data);
 
-updateRepoJson();
+      // Write the JSON data to repo.json file
+      fs.writeFile('repo.json', JSON.stringify(jsonData, null, 2), (err) => {
+        if (err) {
+          console.error('Error writing to repo.json:', err);
+        } else {
+          console.log('repo.json updated successfully!');
+        }
+      });
+    } catch (err) {
+      console.error('Error parsing JSON:', err);
+    }
+  });
+
+}).on('error', (err) => {
+  console.error('Error fetching URL:', err);
+});
