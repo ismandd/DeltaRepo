@@ -1,23 +1,24 @@
-name: Save Link to File
+name: Save Final Link
 
 on:
-  workflow_dispatch: # allows manual triggering
+  workflow_dispatch:
 
 jobs:
   save-link:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
+      - name: Checkout repo
         uses: actions/checkout@v3
 
-      - name: Fetch link content
+      - name: Get final redirected URL
         run: |
-          curl -s https://gloopup.net/Delta/ios/ > link.txt
+          FINAL_URL=$(curl -Ls -o /dev/null -w %{url_effective} https://gloopup.net/Delta/ios/)
+          echo "$FINAL_URL" > link.txt
 
-      - name: Commit and push link.txt
+      - name: Commit and push
         run: |
-          git config --local user.name "github-actions[bot]"
-          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
           git add link.txt
-          git commit -m "Update link.txt"
+          git commit -m "Update link.txt" || exit 0
           git push
