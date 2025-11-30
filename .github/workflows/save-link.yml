@@ -10,10 +10,10 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v3
 
-      - name: Fetch and extract final URL
+      - name: Fetch and extract final .ipa URL
         run: |
           HTML=$(curl -s https://gloopup.net/Delta/ios/)
-          FINAL_URL=$(echo "$HTML" | grep -oP '(?<=href=")[^"]+')
+          FINAL_URL=$(echo "$HTML" | grep -oP '(?<=href=")[^"]+\.ipa' | head -n 1)
           echo "$FINAL_URL" > link.txt
 
       - name: Commit and push
