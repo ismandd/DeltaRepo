@@ -1,1 +1,1 @@
-<!doctype html><title>Redirecting to: https://cdn.gloopup.net/file/Delta-2.700.937.ipa</title><meta http-equiv="refresh" content="2;url=https://cdn.gloopup.net/file/Delta-2.700.937.ipa"><meta name="robots" content="noindex"><link rel="canonical" href="https://cdn.gloopup.net/file/Delta-2.700.937.ipa"><body>	<a href="https://cdn.gloopup.net/file/Delta-2.700.937.ipa">Redirecting from <code>/Delta/ios/</code> to <code>https://cdn.gloopup.net/file/Delta-2.700.937.ipa</code></a></body>
+https://gloopup.net/Delta/ios/
