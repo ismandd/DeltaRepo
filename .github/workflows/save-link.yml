@@ -12,7 +12,7 @@ jobs:
 
       - name: Get final redirected URL
         run: |
-          FINAL_URL=$(curl -Ls -o /dev/null -w %{url_effective} https://gloopup.net/Delta/ios/)
+          FINAL_URL=$(curl -Ls -A "Mozilla/5.0" -o /dev/null -w %{url_effective} https://gloopup.net/Delta/ios/)
           echo "$FINAL_URL" > link.txt
 
       - name: Commit and push
