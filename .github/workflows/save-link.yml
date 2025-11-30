@@ -10,9 +10,10 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v3
 
-      - name: Get final redirected URL
+      - name: Fetch and extract final URL
         run: |
-          FINAL_URL=$(curl -Ls -A "Mozilla/5.0" -o /dev/null -w %{url_effective} https://gloopup.net/Delta/ios/)
+          HTML=$(curl -s https://gloopup.net/Delta/ios/)
+          FINAL_URL=$(echo "$HTML" | grep -oP '(?<=href=")[^"]+')
           echo "$FINAL_URL" > link.txt
 
       - name: Commit and push
