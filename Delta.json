@@ -1,0 +1,54 @@
+{
+  "name": "Delta",
+  "subtitle": "",
+  "description": "",
+  "iconURL": "https://i.imgur.com/pqIZoZo.jpeg",
+  "website": "https://gloopup.net/Delta/ios/",
+  "patreonURL": "",
+  "tintColor": "#6156e2",
+  "featuredApps": [
+    "com.gloop.deltamobile"
+  ],
+  "apps": [
+    {
+      "name": "Roblox",
+      "bundleIdentifier": "com.gloop.deltamobile",
+      "marketplaceID": "",
+      "developerName": "Example Developer",
+      "subtitle": "An awesome app.",
+      "localizedDescription": "This is an awesome app only available on AltStore.",
+      "iconURL": "https://i.imgur.com/n9oyZxE.png",
+      "tintColor": "#345cfc",
+      "category": "other",
+      "screenshots": [],
+      "versions": [
+        {
+          "downloadURL": "https://gloopup.net/Delta/ios/",
+          "size": 1000000,
+          "version": "latest",
+          "buildVersion": "",
+          "date": "2025-12-23T20:03:00+01:00",
+          "localizedDescription": null,
+          "minOSVersion": null
+        }
+      ],
+      "appPermissions": {
+        "entitlements": [],
+        "privacy": {
+          "NSAdvertisingAttributionReportEndpoint": "https://appsflyer-skadnetwork.com/",
+          "NSCameraUsageDescription": "Roblox uses your camera to animate your avatar with your movement and scan QR codes.",
+          "NSContactsUsageDescription": "Connect with friends on Roblox. Your contacts will be regularly synced and matches with other Roblox users will be stored to help you find friends. You can manage this any time in settings.",
+          "NSHumanReadableCopyright": "2014 ROBLOX Inc.",
+          "NSLocalNetworkUsageDescription": "Roblox needs access to local networks to connect to players around you.",
+          "NSLocationWhenInUseUsageDescription": "Roblox needs access to your location to improve your user experience",
+          "NSMicrophoneUsageDescription": "Roblox needs access to your microphone for voice chat.",
+          "NSMotionUsageDescription": "Roblox needs access to the accelerometer to enhance your play experience.",
+          "NSPhotoLibraryAddUsageDescription": "Allow Roblox to access your photo library so you can save images and videos to your device's camera roll.",
+          "NSPhotoLibraryUsageDescription": "Roblox needs access to your photos to enhance your play experience."
+        }
+      },
+      "patreon": {}
+    }
+  ],
+  "news": []
+}
