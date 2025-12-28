@@ -57,18 +57,25 @@ jobs:
           git commit -m "Update link.txt" || exit 0
           git push
 
-      # Delete existing release and tag if it exists
-      - name: Delete existing release and tag if exists
+      # Delete existing release if exists
+      - name: Delete existing release if exists
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           if gh release view "$TAG" &>/dev/null; then
             echo "Release $TAG exists, deleting..."
             gh release delete "$TAG" -y
+          fi
+
+      # Delete remote tag if it exists
+      - name: Delete remote tag if exists
+        run: |
+          if git ls-remote --tags origin | grep -q "refs/tags/${TAG}$"; then
+            echo "Remote tag $TAG exists, deleting..."
             git push origin --delete "$TAG"
           fi
 
-      # Create new Git tag
+      # Create new Git tag and push
       - name: Create Git tag
         run: |
           git tag "$TAG"
@@ -114,12 +121,26 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # Delete old releases/tags except current
-      - name: Delete old releases and tags
+      # Delete old duplicate releases (same IPA name, different tag)
+      - name: Delete old duplicate releases
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          echo "Deleting old releases and tags..."
+          echo "Deleting duplicate releases with same IPA name..."
+          for OLD_TAG in $(gh release list --json tagName,name -q '.[] | select(.name=="'"$FILENAME"'") | .tagName'); do
+            if [ "$OLD_TAG" != "${TAG}" ]; then
+              echo "Deleting duplicate release $OLD_TAG..."
+              gh release delete "$OLD_TAG" -y
+              git push origin --delete "$OLD_TAG"
+            fi
+          done
+
+      # Delete other old releases/tags (everything except current)
+      - name: Delete other old releases and tags
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "Deleting other old releases and tags..."
           for OLD_TAG in $(git tag); do
             if [ "$OLD_TAG" != "${TAG}" ]; then
               echo "Deleting $OLD_TAG..."
