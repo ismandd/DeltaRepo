@@ -1,7 +1,9 @@
 name: Save Final Link
 
 on:
-  workflow_dispatch:
+  schedule:
+    - cron: "0 * * * *"  # Runs every hour
+  workflow_dispatch:      # Optional manual trigger
 
 jobs:
   save-link:
@@ -10,16 +12,29 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v3
 
-      - name: Fetch and extract final .ipa URL
+      - name: Fetch final .ipa URL
+        id: fetch
         run: |
           HTML=$(curl -s https://gloopup.net/Delta/ios/)
           FINAL_URL=$(echo "$HTML" | grep -oP '(?<=href=")[^"]+\.ipa' | head -n 1)
+          echo "FINAL_URL=$FINAL_URL" >> $GITHUB_ENV
           echo "$FINAL_URL" > link.txt
 
-      - name: Commit and push
+      - name: Commit and push link.txt
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add link.txt
           git commit -m "Update link.txt" || exit 0
           git push
+
+      - name: Download .ipa
+        run: |
+          curl -L -o app.ipa "$FINAL_URL"
+
+      - name: Upload to latest release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: app.ipa
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
