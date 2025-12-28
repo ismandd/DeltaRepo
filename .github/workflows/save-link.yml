@@ -12,6 +12,7 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v3
 
+      # Fetch final .ipa URL
       - name: Fetch final .ipa URL
         id: fetch
         run: |
@@ -24,6 +25,7 @@ jobs:
           echo "TAG=$TAG" >> $GITHUB_ENV
           echo "$FINAL_URL" > link.txt
 
+      # Commit and push link.txt
       - name: Commit and push link.txt
         run: |
           git config user.name "github-actions[bot]"
@@ -32,6 +34,7 @@ jobs:
           git commit -m "Update link.txt" || exit 0
           git push
 
+      # Check if tag exists
       - name: Check if tag exists
         id: tag_check
         run: |
@@ -41,33 +44,24 @@ jobs:
             echo "EXISTS=false" >> $GITHUB_ENV
           fi
 
-      - name: Delete previous release and tag if exists
-        if: env.EXISTS == 'true'
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          echo "Deleting previous release and tag..."
-          # Get release id by tag
-          RELEASE_ID=$(gh release view "$TAG" --json id -q ".id")
-          if [ "$RELEASE_ID" != "null" ]; then
-            gh release delete "$TAG" -y
-          fi
-          git push origin --delete "$TAG"
-
-      - name: Create Git tag (if not exists)
+      # Create Git tag if it doesn't exist
+      - name: Create Git tag
         if: env.EXISTS == 'false'
         run: |
           git tag "$TAG"
           git push origin "$TAG"
 
+      # Download IPA with original name
       - name: Download IPA with original name
         run: |
           curl -L -o "$FILENAME" "$FINAL_URL"
 
-      - name: Download IPA as Delta.ipa
+      # Download IPA as Delta.ipa
+      - name: Download IPA as Delta
         run: |
           curl -L -o Delta.ipa "$FINAL_URL"
 
+      # Create Release
       - name: Create Release
         uses: actions/create-release@v1
         with:
@@ -78,6 +72,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      # Upload IPA files
       - name: Upload IPA files
         uses: softprops/action-gh-release@v1
         with:
@@ -85,3 +80,23 @@ jobs:
           tag_name: ${{ env.TAG }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # Delete old releases and tags (everything except the current tag)
+      - name: Delete old releases and tags
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "Deleting old releases and tags..."
+          # List all tags
+          for OLD_TAG in $(git tag); do
+            if [ "$OLD_TAG" != "${TAG}" ]; then
+              echo "Deleting $OLD_TAG..."
+              # Delete release
+              RELEASE_ID=$(gh release view "$OLD_TAG" --json id -q ".id")
+              if [ "$RELEASE_ID" != "null" ]; then
+                gh release delete "$OLD_TAG" -y
+              fi
+              # Delete tag
+              git push origin --delete "$OLD_TAG"
+            fi
+          done
