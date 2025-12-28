@@ -57,19 +57,19 @@ jobs:
           git commit -m "Update link.txt" || exit 0
           git push
 
-      # Check if tag exists
-      - name: Check if tag exists
-        id: tag_check
+      # Delete existing release and tag if it exists
+      - name: Delete existing release and tag if exists
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          if git ls-remote --tags origin | grep -q "refs/tags/${TAG}$"; then
-            echo "EXISTS=true" >> $GITHUB_ENV
-          else
-            echo "EXISTS=false" >> $GITHUB_ENV
+          if gh release view "$TAG" &>/dev/null; then
+            echo "Release $TAG exists, deleting..."
+            gh release delete "$TAG" -y
+            git push origin --delete "$TAG"
           fi
 
-      # Create Git tag if it doesn't exist
+      # Create new Git tag
       - name: Create Git tag
-        if: env.EXISTS == 'false'
         run: |
           git tag "$TAG"
           git push origin "$TAG"
@@ -94,20 +94,8 @@ jobs:
             sleep 60
           done
 
-      # Check if release already exists
-      - name: Check if release exists
-        id: release_check
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          if gh release view "$TAG" &>/dev/null; then
-            echo "RELEASE_EXISTS=true" >> $GITHUB_ENV
-          else
-            echo "RELEASE_EXISTS=false" >> $GITHUB_ENV
-
-      # Create Release (skip if release already exists)
+      # Create new Release
       - name: Create Release
-        if: env.RELEASE_EXISTS == 'false'
         uses: actions/create-release@v1
         with:
           tag_name: ${{ env.TAG }}
@@ -117,9 +105,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # Upload IPA files (skip if release already exists)
+      # Upload IPA files
       - name: Upload IPA files
-        if: env.RELEASE_EXISTS == 'false'
         uses: softprops/action-gh-release@v1
         with:
           files: ${{ env.FILENAME }},Delta.ipa
@@ -127,7 +114,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # Delete old releases and tags (everything except the current tag)
+      # Delete old releases/tags except current
       - name: Delete old releases and tags
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
