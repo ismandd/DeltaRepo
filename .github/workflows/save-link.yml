@@ -23,11 +23,34 @@ jobs:
           echo "FINAL_URL=$FINAL_URL" >> $GITHUB_ENV
           echo "FILENAME=$FILENAME" >> $GITHUB_ENV
           echo "TAG=$TAG" >> $GITHUB_ENV
-          echo "$FINAL_URL" > link.txt
 
-      # Commit and push link.txt
+      # Compare with previous link
+      - name: Check if IPA URL changed
+        id: url_check
+        run: |
+          if [ -f link.txt ]; then
+            OLD_URL=$(cat link.txt)
+          else
+            OLD_URL=""
+          fi
+          echo "OLD_URL=$OLD_URL" >> $GITHUB_ENV
+          if [ "$OLD_URL" = "$FINAL_URL" ]; then
+            echo "CHANGED=false" >> $GITHUB_ENV
+          else
+            echo "CHANGED=true" >> $GITHUB_ENV
+          fi
+
+      # Exit if IPA URL has not changed
+      - name: Skip if IPA unchanged
+        if: env.CHANGED == 'false'
+        run: |
+          echo "IPA URL has not changed. Skipping download, tag, and release."
+          exit 0
+
+      # Update link.txt and commit
       - name: Commit and push link.txt
         run: |
+          echo "$FINAL_URL" > link.txt
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add link.txt
@@ -51,18 +74,40 @@ jobs:
           git tag "$TAG"
           git push origin "$TAG"
 
-      # Download IPA with original name
+      # Download IPA with original name (retry up to 10 times)
       - name: Download IPA with original name
         run: |
-          curl -L -o "$FILENAME" "$FINAL_URL"
+          for i in {1..10}; do
+            echo "Attempt $i: Downloading $FILENAME..."
+            curl -L -o "$FILENAME" "$FINAL_URL" && break
+            echo "Download failed, retrying in 60 seconds..."
+            sleep 60
+          done
 
-      # Download IPA as Delta.ipa
+      # Download IPA as Delta.ipa (retry up to 10 times)
       - name: Download IPA as Delta
         run: |
-          curl -L -o Delta.ipa "$FINAL_URL"
+          for i in {1..10}; do
+            echo "Attempt $i: Downloading Delta.ipa..."
+            curl -L -o Delta.ipa "$FINAL_URL" && break
+            echo "Download failed, retrying in 60 seconds..."
+            sleep 60
+          done
 
-      # Create Release
+      # Check if release already exists
+      - name: Check if release exists
+        id: release_check
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if gh release view "$TAG" &>/dev/null; then
+            echo "RELEASE_EXISTS=true" >> $GITHUB_ENV
+          else
+            echo "RELEASE_EXISTS=false" >> $GITHUB_ENV
+
+      # Create Release (skip if release already exists)
       - name: Create Release
+        if: env.RELEASE_EXISTS == 'false'
         uses: actions/create-release@v1
         with:
           tag_name: ${{ env.TAG }}
@@ -72,8 +117,9 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # Upload IPA files
+      # Upload IPA files (skip if release already exists)
       - name: Upload IPA files
+        if: env.RELEASE_EXISTS == 'false'
         uses: softprops/action-gh-release@v1
         with:
           files: ${{ env.FILENAME }},Delta.ipa
@@ -87,16 +133,13 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           echo "Deleting old releases and tags..."
-          # List all tags
           for OLD_TAG in $(git tag); do
             if [ "$OLD_TAG" != "${TAG}" ]; then
               echo "Deleting $OLD_TAG..."
-              # Delete release
               RELEASE_ID=$(gh release view "$OLD_TAG" --json id -q ".id")
               if [ "$RELEASE_ID" != "null" ]; then
                 gh release delete "$OLD_TAG" -y
               fi
-              # Delete tag
               git push origin --delete "$OLD_TAG"
             fi
           done
