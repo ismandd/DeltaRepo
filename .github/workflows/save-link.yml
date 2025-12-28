@@ -9,17 +9,22 @@ jobs:
   save-link:
     runs-on: ubuntu-latest
     steps:
+      # Checkout the repo
       - name: Checkout repo
         uses: actions/checkout@v3
 
+      # Fetch final .ipa URL
       - name: Fetch final .ipa URL
         id: fetch
         run: |
           HTML=$(curl -s https://gloopup.net/Delta/ios/)
           FINAL_URL=$(echo "$HTML" | grep -oP '(?<=href=")[^"]+\.ipa' | head -n 1)
+          FILENAME=$(basename "$FINAL_URL")
           echo "FINAL_URL=$FINAL_URL" >> $GITHUB_ENV
+          echo "FILENAME=$FILENAME" >> $GITHUB_ENV
           echo "$FINAL_URL" > link.txt
 
+      # Commit and push link.txt
       - name: Commit and push link.txt
         run: |
           git config user.name "github-actions[bot]"
@@ -28,32 +33,35 @@ jobs:
           git commit -m "Update link.txt" || exit 0
           git push
 
+      # Create Git tag using IPA filename
       - name: Create Git tag
-        id: tag
         run: |
-          TAG="ipa-$(date +'%Y%m%d%H%M')"
-          git tag $TAG
-          git push origin $TAG
+          TAG="${FILENAME%.*}"  # remove .ipa extension for tag
+          git tag "$TAG"
+          git push origin "$TAG"
           echo "TAG=$TAG" >> $GITHUB_ENV
 
+      # Download the IPA using original filename
       - name: Download .ipa
         run: |
-          curl -L -o app.ipa "$FINAL_URL"
+          curl -L -o "$FILENAME" "$FINAL_URL"
 
+      # Create Release
       - name: Create Release
         uses: actions/create-release@v1
         with:
           tag_name: ${{ env.TAG }}
-          release_name: "IPA Release ${{ env.TAG }}"
+          release_name: ${{ env.FILENAME }}
           draft: false
           prerelease: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      # Upload the IPA
       - name: Upload IPA
         uses: softprops/action-gh-release@v1
         with:
-          files: app.ipa
+          files: ${{ env.FILENAME }}
           tag_name: ${{ env.TAG }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
