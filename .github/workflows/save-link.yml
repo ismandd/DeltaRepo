@@ -9,22 +9,21 @@ jobs:
   save-link:
     runs-on: ubuntu-latest
     steps:
-      # Checkout the repo
       - name: Checkout repo
         uses: actions/checkout@v3
 
-      # Fetch final .ipa URL
       - name: Fetch final .ipa URL
         id: fetch
         run: |
           HTML=$(curl -s https://gloopup.net/Delta/ios/)
           FINAL_URL=$(echo "$HTML" | grep -oP '(?<=href=")[^"]+\.ipa' | head -n 1)
           FILENAME=$(basename "$FINAL_URL")
+          TAG="${FILENAME%.*}"
           echo "FINAL_URL=$FINAL_URL" >> $GITHUB_ENV
           echo "FILENAME=$FILENAME" >> $GITHUB_ENV
+          echo "TAG=$TAG" >> $GITHUB_ENV
           echo "$FINAL_URL" > link.txt
 
-      # Commit and push link.txt
       - name: Commit and push link.txt
         run: |
           git config user.name "github-actions[bot]"
@@ -33,25 +32,40 @@ jobs:
           git commit -m "Update link.txt" || exit 0
           git push
 
-      # Create Git tag using IPA filename (without .ipa)
-      - name: Create Git tag
+      - name: Check if tag exists
+        id: tag_check
         run: |
-          TAG="${FILENAME%.*}"
+          if git ls-remote --tags origin | grep -q "refs/tags/${TAG}$"; then
+            echo "EXISTS=true" >> $GITHUB_ENV
+          else
+            echo "EXISTS=false" >> $GITHUB_ENV
+          fi
+
+      - name: Delete previous release and tag if exists
+        if: env.EXISTS == 'true'
+        run: |
+          echo "Deleting previous release and tag..."
+          # Get release id by tag
+          RELEASE_ID=$(gh release view "$TAG" --json id -q ".id")
+          if [ "$RELEASE_ID" != "null" ]; then
+            gh release delete "$TAG" -y
+          fi
+          git push origin --delete "$TAG"
+
+      - name: Create Git tag (if not exists)
+        if: env.EXISTS == 'false'
+        run: |
           git tag "$TAG"
           git push origin "$TAG"
-          echo "TAG=$TAG" >> $GITHUB_ENV
 
-      # Download the IPA with original name
-      - name: Download original IPA
+      - name: Download IPA with original name
         run: |
           curl -L -o "$FILENAME" "$FINAL_URL"
 
-      # Download the same IPA as Delta.ipa
-      - name: Download IPA as Delta
+      - name: Download IPA as Delta.ipa
         run: |
           curl -L -o Delta.ipa "$FINAL_URL"
 
-      # Create Release
       - name: Create Release
         uses: actions/create-release@v1
         with:
@@ -62,7 +76,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # Upload both IPA files
       - name: Upload IPA files
         uses: softprops/action-gh-release@v1
         with:
