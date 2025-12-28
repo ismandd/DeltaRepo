@@ -9,9 +9,11 @@ jobs:
   save-link:
     runs-on: ubuntu-latest
     steps:
+      # Checkout the repo
       - name: Checkout repo
         uses: actions/checkout@v3
 
+      # Fetch final .ipa URL
       - name: Fetch final .ipa URL
         id: fetch
         run: |
@@ -20,6 +22,7 @@ jobs:
           echo "FINAL_URL=$FINAL_URL" >> $GITHUB_ENV
           echo "$FINAL_URL" > link.txt
 
+      # Commit and push link.txt
       - name: Commit and push link.txt
         run: |
           git config user.name "github-actions[bot]"
@@ -28,13 +31,28 @@ jobs:
           git commit -m "Update link.txt" || exit 0
           git push
 
+      # Download the IPA
       - name: Download .ipa
         run: |
           curl -L -o app.ipa "$FINAL_URL"
 
-      - name: Upload to latest release
+      # Create a new release
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        with:
+          tag_name: "ipa-$(date +'%Y%m%d%H%M')"
+          release_name: "IPA Release $(date +'%Y-%m-%d %H:%M')"
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # Upload the IPA to the release
+      - name: Upload IPA
         uses: softprops/action-gh-release@v1
         with:
           files: app.ipa
+          tag_name: ${{ steps.create_release.outputs.tag_name }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
