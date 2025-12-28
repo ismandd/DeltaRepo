@@ -1,63 +1,34 @@
 {
-  "name": "My Example Source",
-  "subtitle": "All my apps in one place.",
-  "description": "Welcome to my source! Here you'll find all of my apps.",
-  "iconURL": "https://f000.backblazeb2.com/file/rileytestut/ExampleSource/OctoSource.png",
-  "headerURL": "https://f000.backblazeb2.com/file/rileytestut/ExampleSource/OceanHeader.png",
-  "website": "https://example.com",
-  "tintColor": "#4185A9",
-  "featuredApps": [
-    "com.example.myapp"
-  ],
-  "apps": [
-    {
-      "name": "Delta",
-      "bundleIdentifier": "com.example.myapp",
-      "developerName": "Example Developer",
-      "subtitle": "An awesome app.",
-      "localizedDescription": "This is an awesome app only available on AltStore.",
-      "iconURL": "https://f000.backblazeb2.com/file/rileytestut/ExampleSource/FishApp.png",
-      "tintColor": "#5CA399",
-      "screenshots": [
-        "https://example.com/myapp_portrait_screenshot1.png",
-        "https://example.com/myapp_portrait_screenshot2.png",
+    "name": "Delta Source",
+    "subtitle": "Delta IPA in one place",
+    "description": "Latest Delta IPA for AltStore.",
+    "iconURL": "https://raw.githubusercontent.com/ismandd/DeltaRepo/main/DeltaIcon.png",
+    "headerURL": "https://raw.githubusercontent.com/ismandd/DeltaRepo/main/DeltaHeader.png",
+    "website": "https://github.com/ismandd/DeltaRepo",
+    "tintColor": "#4185A9",
+    "featuredApps": [
+        "com.delta.app"
+    ],
+    "apps": [
         {
-          "imageURL": "https://example.com/myapp_landscape_screenshot.png",
-          "width": 2556,
-          "height": 1179
+            "name": "Delta",
+            "bundleIdentifier": "com.delta.app",
+            "developerName": "Delta Team",
+            "subtitle": "All-in-one emulator",
+            "localizedDescription": "Delta is a multi-console emulator for iOS, installable via AltStore.",
+            "iconURL": "https://raw.githubusercontent.com/ismandd/DeltaRepo/main/DeltaIcon.png",
+            "tintColor": "#5CA399",
+            "screenshots": [],
+            "versions": [
+                {
+                    "version": "latest",
+                    "date": "2025-12-28",
+                    "size": 50000000,
+                    "downloadURL": "https://github.com/ismandd/DeltaRepo/releases/latest/download/Delta.ipa",
+                    "localizedDescription": "Latest release of Delta.",
+                    "minOSVersion": "12.0"
+                }
+            ]
         }
-      ],
-      "versions": [
-        {
-          "version": "2.679.761",
-          "date": "2025-07-19T00:00:00-00:00",
-          "size": 12345678,
-          "downloadURL": "https://delta.webfiles.pro/file/Delta-2.679.761.ipa",
-          "localizedDescription": "Latest stable release.",
-          "minOSVersion": "12.0"
-        }
-      ],
-      "appPermissions": {
-        "entitlements": [
-          "com.apple.security.application-groups"
-        ],
-        "privacy": {
-          "NSPhotoLibraryUsageDescription": "App saves photos to your Photo Library.",
-          "NSCameraUsageDescription": "App uses camera to take photos."
-        }
-      }
-    }
-  ],
-  "news": [
-    {
-      "title": "New Feature Announcement",
-      "identifier": "new_feature",
-      "caption": "Introducing a new feature in AltStore!",
-      "date": "2025-07-19",
-      "tintColor": "#5CA399",
-      "imageURL": "https://example.com/new_feature_image.png",
-      "notify": true,
-      "url": "https://example.com/new_feature_details"
-    }
-  ]
+    ]
 }
