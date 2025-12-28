@@ -2,21 +2,21 @@
     "name": "Delta Source",
     "subtitle": "Delta IPA in one place",
     "description": "Latest Delta IPA for AltStore.",
-    "iconURL": "https://raw.githubusercontent.com/ismandd/DeltaRepo/main/DeltaIcon.png",
-    "headerURL": "https://raw.githubusercontent.com/ismandd/DeltaRepo/main/DeltaHeader.png",
+    "iconURL": "https://deltaexploits.gg/favicon.ico",
+    "headerURL": "",
     "website": "https://github.com/ismandd/DeltaRepo",
     "tintColor": "#4185A9",
     "featuredApps": [
-        "com.delta.app"
+        "com.gloop.deltamobile"
     ],
     "apps": [
         {
             "name": "Delta",
-            "bundleIdentifier": "com.delta.app",
+            "bundleIdentifier": "com.gloop.deltamobile",
             "developerName": "Delta Team",
-            "subtitle": "All-in-one emulator",
-            "localizedDescription": "Delta is a multi-console emulator for iOS, installable via AltStore.",
-            "iconURL": "https://raw.githubusercontent.com/ismandd/DeltaRepo/main/DeltaIcon.png",
+            "subtitle": "Delta Executer",
+            "localizedDescription": "Delta is a revolutionary new way to experience the world of scripting with its extensive library of features that will make your life easier.",
+            "iconURL": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f2/Roblox_%282025%29_%28App_Icon%29.svg/2048px-Roblox_%282025%29_%28App_Icon%29.svg.png",
             "tintColor": "#5CA399",
             "screenshots": [],
             "versions": [
