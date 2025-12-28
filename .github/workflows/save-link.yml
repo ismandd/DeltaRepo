@@ -2,7 +2,7 @@ name: Save Final Link
 
 on:
   schedule:
-    - cron: "0 * * * *"  # Runs every hour
+    - cron: "0 * * * *"
   workflow_dispatch:
 
 jobs:
@@ -12,117 +12,97 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v3
 
-      # Fetch final .ipa URL
       - name: Fetch final .ipa URL
-        id: fetch
         run: |
           HTML=$(curl -s https://gloopup.net/Delta/ios/)
-          FINAL_URL=$(echo "$HTML" | grep -oP '(?<=href=")[^"]+\.ipa' | head -n 1)
+          FINAL_URL=$(echo "$HTML" | grep -oP '(?<=href=")[^"]+\.ipa' | head -n 1 || true)
+
+          if [ -z "$FINAL_URL" ]; then
+            echo "No IPA URL found, real error."
+            exit 1
+          fi
+
           FILENAME=$(basename "$FINAL_URL")
           TAG="${FILENAME%.*}"
+
           echo "FINAL_URL=$FINAL_URL" >> $GITHUB_ENV
           echo "FILENAME=$FILENAME" >> $GITHUB_ENV
           echo "TAG=$TAG" >> $GITHUB_ENV
 
-      # Compare with previous link
-      - name: Check if IPA URL changed
-        id: url_check
+      - name: Detect change
         run: |
-          if [ -f link.txt ]; then
-            OLD_URL=$(cat link.txt)
-          else
-            OLD_URL=""
-          fi
-          echo "OLD_URL=$OLD_URL" >> $GITHUB_ENV
+          OLD_URL=""
+          [ -f link.txt ] && OLD_URL=$(cat link.txt)
+
           if [ "$OLD_URL" = "$FINAL_URL" ]; then
             echo "CHANGED=false" >> $GITHUB_ENV
+            echo "Already latest — skipping release creation."
           else
             echo "CHANGED=true" >> $GITHUB_ENV
+          fi
 
-      # Update link.txt and commit (only if changed)
-      - name: Commit and push link.txt
+      - name: Save link.txt
         if: env.CHANGED == 'true'
         run: |
           echo "$FINAL_URL" > link.txt
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add link.txt
-          git commit -m "Update link.txt" || exit 0
-          git push
+          git commit -m "Update link.txt" || true
+          git push || true
 
-      # Remove old tag if exists (only if changed)
-      - name: Remove old tag if exists
+      - name: Download IPA (original name)
+        if: env.CHANGED == 'true'
+        run: |
+          for i in {1..10}; do
+            echo "Download attempt $i..."
+            curl -fL -o "$FILENAME" "$FINAL_URL" && break
+            sleep 60
+          done
+
+          [ -f "$FILENAME" ] || exit 1
+
+      - name: Download IPA as Delta.ipa
+        if: env.CHANGED == 'true'
+        run: |
+          for i in {1..10}; do
+            echo "Download attempt $i..."
+            curl -fL -o Delta.ipa "$FINAL_URL" && break
+            sleep 60
+          done
+
+          [ -f "Delta.ipa" ] || exit 1
+
+      - name: Create tag (if missing)
         if: env.CHANGED == 'true'
         run: |
           if git ls-remote --tags origin | grep -q "refs/tags/${TAG}$"; then
-            git push origin --delete "$TAG"
+            echo "Tag already exists — skipping tag creation."
+          else
+            git tag "$TAG"
+            git push origin "$TAG"
           fi
-        shell: bash
 
-      # Download IPA with original name (only if changed)
-      - name: Download IPA with original name
+      - name: Create release (if missing)
         if: env.CHANGED == 'true'
-        run: |
-          for i in {1..10}; do
-            echo "Attempt $i: Downloading $FILENAME..."
-            curl -L -o "$FILENAME" "$FINAL_URL" && break
-            echo "Download failed, retrying in 60 seconds..."
-            sleep 60
-          done
-
-      # Download IPA as Delta.ipa (only if changed)
-      - name: Download IPA as Delta
-        if: env.CHANGED == 'true'
-        run: |
-          for i in {1..10}; do
-            echo "Attempt $i: Downloading Delta.ipa..."
-            curl -L -o Delta.ipa "$FINAL_URL" && break
-            echo "Download failed, retrying in 60 seconds..."
-            sleep 60
-          done
-
-      # Create Git tag (only if changed)
-      - name: Create Git tag
-        if: env.CHANGED == 'true'
-        run: |
-          git tag "$TAG"
-          git push origin "$TAG"
-
-      # Create Release (only if changed)
-      - name: Create Release
-        if: env.CHANGED == 'true'
-        uses: actions/create-release@v1
-        with:
-          tag_name: ${{ env.TAG }}
-          release_name: ${{ env.FILENAME }}
-          draft: false
-          prerelease: false
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      # Upload IPA files (only if changed)
-      - name: Upload IPA files
-        if: env.CHANGED == 'true'
-        uses: softprops/action-gh-release@v1
-        with:
-          files: ${{ env.FILENAME }},Delta.ipa
-          tag_name: ${{ env.TAG }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      # Delete old releases/tags (always runs)
-      - name: Delete old releases and tags
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          echo "Deleting old releases and tags..."
-          for OLD_TAG in $(git tag); do
-            if [ "$OLD_TAG" != "${TAG}" ]; then
-              echo "Deleting old release/tag: $OLD_TAG"
-              RELEASE_ID=$(gh release view "$OLD_TAG" --json id -q ".id")
-              if [ "$RELEASE_ID" != "null" ]; then
-                gh release delete "$OLD_TAG" -y
-              fi
-              git push origin --delete "$OLD_TAG"
-            fi
+          if gh release view "$TAG" &>/dev/null; then
+            echo "Release already exists — skipping creation."
+          else
+            gh release create "$TAG" "$FILENAME" Delta.ipa --title "$FILENAME"
+          fi
+
+      - name: Cleanup old releases (after success)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          CURRENT_TAG="${TAG}"
+
+          gh release list --limit 100 | awk '{print $1}' | while read OLD_TAG; do
+            [ "$OLD_TAG" = "$CURRENT_TAG" ] && continue
+            echo "Deleting old release $OLD_TAG"
+            gh release delete "$OLD_TAG" -y || true
+            git push origin --delete "$OLD_TAG" || true
           done
