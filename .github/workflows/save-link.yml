@@ -38,17 +38,10 @@ jobs:
             echo "CHANGED=false" >> $GITHUB_ENV
           else
             echo "CHANGED=true" >> $GITHUB_ENV
-          fi
 
-      # Exit if IPA URL has not changed
-      - name: Skip if IPA unchanged
-        if: env.CHANGED == 'false'
-        run: |
-          echo "IPA URL has not changed. Skipping download, tag, and release."
-          exit 0
-
-      # Update link.txt and commit
+      # Update link.txt and commit (only if changed)
       - name: Commit and push link.txt
+        if: env.CHANGED == 'true'
         run: |
           echo "$FINAL_URL" > link.txt
           git config user.name "github-actions[bot]"
@@ -57,32 +50,18 @@ jobs:
           git commit -m "Update link.txt" || exit 0
           git push
 
-      # Delete existing release if exists
-      - name: Delete existing release if exists
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          if gh release view "$TAG" &>/dev/null; then
-            echo "Release $TAG exists, deleting..."
-            gh release delete "$TAG" -y
-          fi
-
-      # Delete remote tag if it exists
-      - name: Delete remote tag if exists
+      # Remove old tag if exists (only if changed)
+      - name: Remove old tag if exists
+        if: env.CHANGED == 'true'
         run: |
           if git ls-remote --tags origin | grep -q "refs/tags/${TAG}$"; then
-            echo "Remote tag $TAG exists, deleting..."
             git push origin --delete "$TAG"
           fi
+        shell: bash
 
-      # Create new Git tag and push
-      - name: Create Git tag
-        run: |
-          git tag "$TAG"
-          git push origin "$TAG"
-
-      # Download IPA with original name (retry up to 10 times)
+      # Download IPA with original name (only if changed)
       - name: Download IPA with original name
+        if: env.CHANGED == 'true'
         run: |
           for i in {1..10}; do
             echo "Attempt $i: Downloading $FILENAME..."
@@ -91,8 +70,9 @@ jobs:
             sleep 60
           done
 
-      # Download IPA as Delta.ipa (retry up to 10 times)
+      # Download IPA as Delta.ipa (only if changed)
       - name: Download IPA as Delta
+        if: env.CHANGED == 'true'
         run: |
           for i in {1..10}; do
             echo "Attempt $i: Downloading Delta.ipa..."
@@ -101,8 +81,16 @@ jobs:
             sleep 60
           done
 
-      # Create new Release
+      # Create Git tag (only if changed)
+      - name: Create Git tag
+        if: env.CHANGED == 'true'
+        run: |
+          git tag "$TAG"
+          git push origin "$TAG"
+
+      # Create Release (only if changed)
       - name: Create Release
+        if: env.CHANGED == 'true'
         uses: actions/create-release@v1
         with:
           tag_name: ${{ env.TAG }}
@@ -112,8 +100,9 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # Upload IPA files
+      # Upload IPA files (only if changed)
       - name: Upload IPA files
+        if: env.CHANGED == 'true'
         uses: softprops/action-gh-release@v1
         with:
           files: ${{ env.FILENAME }},Delta.ipa
@@ -121,29 +110,15 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # Delete old duplicate releases (same IPA name, different tag)
-      - name: Delete old duplicate releases
+      # Delete old releases/tags (always runs)
+      - name: Delete old releases and tags
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          echo "Deleting duplicate releases with same IPA name..."
-          for OLD_TAG in $(gh release list --json tagName,name -q '.[] | select(.name=="'"$FILENAME"'") | .tagName'); do
-            if [ "$OLD_TAG" != "${TAG}" ]; then
-              echo "Deleting duplicate release $OLD_TAG..."
-              gh release delete "$OLD_TAG" -y
-              git push origin --delete "$OLD_TAG"
-            fi
-          done
-
-      # Delete other old releases/tags (everything except current)
-      - name: Delete other old releases and tags
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          echo "Deleting other old releases and tags..."
+          echo "Deleting old releases and tags..."
           for OLD_TAG in $(git tag); do
             if [ "$OLD_TAG" != "${TAG}" ]; then
-              echo "Deleting $OLD_TAG..."
+              echo "Deleting old release/tag: $OLD_TAG"
               RELEASE_ID=$(gh release view "$OLD_TAG" --json id -q ".id")
               if [ "$RELEASE_ID" != "null" ]; then
                 gh release delete "$OLD_TAG" -y
