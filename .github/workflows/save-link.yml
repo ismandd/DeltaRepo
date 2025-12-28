@@ -33,18 +33,23 @@ jobs:
           git commit -m "Update link.txt" || exit 0
           git push
 
-      # Create Git tag using IPA filename
+      # Create Git tag using IPA filename (without .ipa)
       - name: Create Git tag
         run: |
-          TAG="${FILENAME%.*}"  # remove .ipa extension for tag
+          TAG="${FILENAME%.*}"
           git tag "$TAG"
           git push origin "$TAG"
           echo "TAG=$TAG" >> $GITHUB_ENV
 
-      # Download the IPA using original filename
-      - name: Download .ipa
+      # Download the IPA with original name
+      - name: Download original IPA
         run: |
           curl -L -o "$FILENAME" "$FINAL_URL"
+
+      # Download the same IPA as Delta.ipa
+      - name: Download IPA as Delta
+        run: |
+          curl -L -o Delta.ipa "$FINAL_URL"
 
       # Create Release
       - name: Create Release
@@ -57,11 +62,11 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # Upload the IPA
-      - name: Upload IPA
+      # Upload both IPA files
+      - name: Upload IPA files
         uses: softprops/action-gh-release@v1
         with:
-          files: ${{ env.FILENAME }}
+          files: ${{ env.FILENAME }},Delta.ipa
           tag_name: ${{ env.TAG }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
