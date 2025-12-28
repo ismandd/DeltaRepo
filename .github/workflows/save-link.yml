@@ -43,6 +43,8 @@ jobs:
 
       - name: Delete previous release and tag if exists
         if: env.EXISTS == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           echo "Deleting previous release and tag..."
           # Get release id by tag
