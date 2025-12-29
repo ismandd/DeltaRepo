@@ -1,34 +1,34 @@
 {
-    "name": "Delta Dynamics",
-    "subtitle": "Delta IPA in one place",
-    "description": "Latest Delta IPA for AltStore.",
-    "iconURL": "https://deltaexploits.gg/favicon.ico",
-    "headerURL": "https://deltaexploits.gg/favicon.ico",
-    "website": "https://github.com/ismandd/DeltaRepo",
-    "tintColor": "#303030",
-    "featuredApps": [
-        "com.gloop.deltamobile"
-    ],
-    "apps": [
+  "name": "Delta Dynamics",
+  "subtitle": "Delta IPA in one place",
+  "description": "Latest Delta IPA for AltStore.",
+  "iconURL": "https://deltaexploits.gg/favicon.ico",
+  "headerURL": "https://deltaexploits.gg/favicon.ico",
+  "website": "https://github.com/ismandd/DeltaRepo",
+  "tintColor": "#303030",
+  "featuredApps": [
+    "com.gloop.deltamobile"
+  ],
+  "apps": [
+    {
+      "name": "Delta",
+      "bundleIdentifier": "com.gloop.deltamobile",
+      "developerName": "Delta Team",
+      "subtitle": "Roblox Executor",
+      "localizedDescription": "Delta is a revolutionary new way to experience the world of scripting with its extensive library of features that will make your life easier.",
+      "iconURL": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f2/Roblox_%282025%29_%28App_Icon%29.svg/2048px-Roblox_%282025%29_%28App_Icon%29.svg.png",
+      "tintColor": "#7f7cff",
+      "screenshots": [],
+      "versions": [
         {
-            "name": "Delta",
-            "bundleIdentifier": "com.gloop.deltamobile",
-            "developerName": "Delta Team",
-            "subtitle": "Roblox Executor",
-            "localizedDescription": "Delta is a revolutionary new way to experience the world of scripting with its extensive library of features that will make your life easier.",
-            "iconURL": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f2/Roblox_%282025%29_%28App_Icon%29.svg/2048px-Roblox_%282025%29_%28App_Icon%29.svg.png",
-            "tintColor": "#7f7cff",
-            "screenshots": [],
-            "versions": [
-                {
-                    "version": "latest",
-                    "date": "2025-12-28",
-                    "size": 50000000,
-                    "downloadURL": "https://github.com/ismandd/DeltaRepo/releases/latest/download/Delta.ipa",
-                    "localizedDescription": "Latest release.",
-                    "minOSVersion": "12.0"
-                }
-            ]
+          "version": "2.702.633",
+          "date": "2025-12-29",
+          "size": 122842904,
+          "downloadURL": "https://github.com/ismandd/DeltaRepo/releases/latest/download/Delta.ipa",
+          "localizedDescription": "Latest release.",
+          "minOSVersion": "12.0"
         }
-    ]
+      ]
+    }
+  ]
 }
