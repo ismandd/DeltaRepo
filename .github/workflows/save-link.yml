@@ -25,9 +25,13 @@ jobs:
           FILENAME=$(basename "$FINAL_URL")
           TAG="${FILENAME%.*}"
 
+          # Extract real version (Delta-2.702.633.ipa → 2.702.633)
+          VERSION=$(echo "$FILENAME" | sed -E 's/^Delta-([0-9.]+)\.ipa$/\1/')
+
           echo "FINAL_URL=$FINAL_URL" >> $GITHUB_ENV
           echo "FILENAME=$FILENAME" >> $GITHUB_ENV
           echo "TAG=$TAG" >> $GITHUB_ENV
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
 
       - name: Detect change
         run: |
@@ -59,7 +63,6 @@ jobs:
             curl -fL -o "$FILENAME" "$FINAL_URL" && break
             sleep 60
           done
-
           [ -f "$FILENAME" ] || exit 1
 
       - name: Download IPA as Delta.ipa
@@ -70,8 +73,32 @@ jobs:
             curl -fL -o Delta.ipa "$FINAL_URL" && break
             sleep 60
           done
-
           [ -f "Delta.ipa" ] || exit 1
+
+      - name: Update repo.json (AltStore fix)
+        if: env.CHANGED == 'true'
+        run: |
+          SIZE=$(stat -c%s Delta.ipa)
+          DATE=$(date +%Y-%m-%d)
+
+          jq \
+            --arg version "$VERSION" \
+            --arg date "$DATE" \
+            --argjson size "$SIZE" \
+            '
+            .apps[0].versions[0].version = $version |
+            .apps[0].versions[0].date = $date |
+            .apps[0].versions[0].size = $size
+            ' repo.json > repo.tmp.json
+
+          mv repo.tmp.json repo.json
+
+      - name: Commit repo.json
+        if: env.CHANGED == 'true'
+        run: |
+          git add repo.json
+          git commit -m "Update repo.json for Delta $VERSION" || true
+          git push || true
 
       - name: Create tag (if missing)
         if: env.CHANGED == 'true'
