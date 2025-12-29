@@ -5,7 +5,7 @@
     "iconURL": "https://deltaexploits.gg/favicon.ico",
     "headerURL": "",
     "website": "https://github.com/ismandd/DeltaRepo",
-    "tintColor": "#4185A9",
+    "tintColor": "#7f7cff",
     "featuredApps": [
         "com.gloop.deltamobile"
     ],
@@ -17,7 +17,7 @@
             "subtitle": "Roblox Executor",
             "localizedDescription": "Delta is a revolutionary new way to experience the world of scripting with its extensive library of features that will make your life easier.",
             "iconURL": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f2/Roblox_%282025%29_%28App_Icon%29.svg/2048px-Roblox_%282025%29_%28App_Icon%29.svg.png",
-            "tintColor": "#7f7cff",
+            "tintColor": "#818cf8",
             "screenshots": [],
             "versions": [
                 {
