@@ -25,7 +25,7 @@
                     "date": "2025-12-28",
                     "size": 50000000,
                     "downloadURL": "https://github.com/ismandd/DeltaRepo/releases/latest/download/Delta.ipa",
-                    "localizedDescription": "Latest release of Delta.",
+                    "localizedDescription": "Latest release.",
                     "minOSVersion": "12.0"
                 }
             ]
