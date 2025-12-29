@@ -1,0 +1,44 @@
+{
+  "name": "Delta Dynamics",
+  "identifier": "com.ismand.delta.repo",
+  "website": "https://github.com/ismandd/DeltaRepo",
+  "subtitle": "Delta IPA in one place",
+  "description": "Latest Delta IPA for AltStore.",
+  "tintColor": "#303030",
+  "iconURL": "https://deltaexploits.gg/favicon.ico",
+  "headerURL": "",
+  "apps": [
+    {
+      "name": "Delta",
+      "bundleIdentifier": "com.gloop.deltamobile",
+      "developerName": "Delta Team",
+      "subtitle": "Roblox Executor",
+      "version": "latest",
+      "versionDate": "2025-12-28",
+      "versionDescription": "Latest release of Delta.",
+      "downloadURL": "https://github.com/ismandd/DeltaRepo/releases/latest/download/Delta.ipa",
+      "localizedDescription": "Delta is a revolutionary new way to experience the world of scripting with its extensive library of features that will make your life easier.",
+      "iconURL": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f2/Roblox_%282025%29_%28App_Icon%29.svg/2048px-Roblox_%282025%29_%28App_Icon%29.svg.png",
+      "tintColor": "#7f7cff",
+      "size": 50000000,
+      "screenshots": {
+        "iphone": []
+      },
+      "appPermissions": {
+        "entitlements": [],
+        "privacy": {}
+      },
+      "versions": [
+        {
+          "version": "latest",
+          "date": "2025-12-28",
+          "localizedDescription": "Latest release of Delta.",
+          "downloadURL": "https://github.com/ismandd/DeltaRepo/releases/latest/download/Delta.ipa",
+          "size": 50000000,
+          "minOSVersion": "12.0"
+        }
+      ]
+    }
+  ],
+  "news": []
+}
